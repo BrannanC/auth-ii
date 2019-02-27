@@ -16,10 +16,10 @@ server.use(helmet());
 server.use(express.json());
 server.use(cors());
 
-server.get('/api/users', (req, res) => {
+server.get('/api/users', restricted, (req, res) => {
     db('users')
         .then(users => {
-            res.status(200).json({ users, message: 'You got the users' })
+            res.status(200).json({ users })
         })
         .catch()
 });
@@ -86,6 +86,17 @@ server.post('/api/login', (req, res) => {
             res.status(500).json(error);
           });
 });
+
+function restricted(req, res, next) {
+    const token = req.headers.authorization;
+    token ? 
+    jwt.verify(token, secret, (err, decodedToken) => {
+        err ?
+        res.status(401).json({ error: 'No touchy' })
+        : next();
+    })
+    : res.status(401).json({ you: 'Shall not pass!' })
+}
 
 const port = process.env.PORT || 5000;
 server.listen(port, () => console.log(`\n** Running on port ${port} **\n`));
